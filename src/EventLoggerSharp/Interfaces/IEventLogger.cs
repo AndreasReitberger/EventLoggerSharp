@@ -1,5 +1,6 @@
 ﻿using AndreasReitberger.Logging.Enums;
 using System.ComponentModel;
+using System.Threading.Tasks;
 
 namespace AndreasReitberger.Logging.Interfaces
 {
@@ -36,6 +37,7 @@ namespace AndreasReitberger.Logging.Interfaces
         #region Logging
 
         public void Log(string message, LogLevel level = LogLevel.Info);
+        public Task LogAsync(string message, LogLevel level = LogLevel.Info);
         #endregion
 
         #endregion

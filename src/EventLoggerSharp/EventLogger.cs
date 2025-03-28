@@ -1,6 +1,9 @@
 ﻿using AndreasReitberger.Logging.Enums;
 using AndreasReitberger.Logging.Interfaces;
 using Newtonsoft.Json;
+using System.Diagnostics;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace AndreasReitberger.Logging
 {
@@ -63,9 +66,66 @@ namespace AndreasReitberger.Logging
         #region Public Methods
 
         #region Logging
+        public void WriteToConsole(string message, LogLevel level = LogLevel.Info)
+        {
+            ConsoleColor foreground = level switch
+            {
+                LogLevel.Warning => ConsoleColor.Yellow,
+                LogLevel.Error => ConsoleColor.Red,
+                _ => ConsoleColor.White,
+            };
+            if (!string.IsNullOrEmpty(message))
+            {
+                Console.ForegroundColor = foreground;
+                Console.WriteLine(message);
+                Console.ForegroundColor = ConsoleColor.White;
+            }
+        }
         public void Log(string message, LogLevel level = LogLevel.Info)
         {
+            string logText = $"{DateTime.Now}: {level}\t| {message}";
+            // Always report the text also to the console
+            WriteToConsole(logText, level);
 
+            if (string.IsNullOrEmpty(LogPath) || string.IsNullOrEmpty(LogFileExtension)) 
+            {
+                Debug.WriteLine(logText);
+            }
+            else
+            {
+                string filename = $"{DateTime.Now:yyyy-MM-dd}{(LogFileExtension.StartsWith(".") ? LogFileExtension : $".{LogFileExtension}")}";
+                string targetFile = Path.Combine(LogPath, filename);
+
+                if (!Directory.Exists(LogPath)) Directory.CreateDirectory(LogPath);
+                using FileStream fs = new(targetFile, FileMode.Append, FileAccess.Write);
+                using StreamWriter sw = new(fs);
+
+                sw.WriteLine(logText);
+                sw.Close();
+            }
+        }
+        public async Task LogAsync(string message, LogLevel level = LogLevel.Info)
+        {
+            string logText = $"{DateTime.Now}: {level} | {message}";
+            // Always report the text also to the console
+            WriteToConsole(logText, level);
+
+            if (string.IsNullOrEmpty(LogPath) || string.IsNullOrEmpty(LogFileExtension)) 
+            {
+                Debug.WriteLine(logText);
+            }
+            else
+            {
+                string filename = $"{DateTime.Now:yyyy-MM-dd}{(LogFileExtension.StartsWith(".") ? LogFileExtension : $".{LogFileExtension}")}";
+                string targetFile = Path.Combine(LogPath, filename);
+
+                if (!Directory.Exists(LogPath)) Directory.CreateDirectory(LogPath);
+                using FileStream fs = new(targetFile, FileMode.Append, FileAccess.Write);
+                using StreamWriter sw = new(fs);
+
+                await sw.WriteLineAsync(logText);
+                sw.Close();
+            }
         }
         #endregion
 
