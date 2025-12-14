@@ -20,6 +20,13 @@ namespace AndreasReitberger.Logging
         {
             Error?.Invoke(this, e);
         }
+
+        public event EventHandler<LogEventArgs>? LogReceived;
+        protected virtual void OnLogReceived(LogEventArgs e)
+        {
+            LogReceived?.Invoke(this, e);
+        }
+
         #endregion
 
     }

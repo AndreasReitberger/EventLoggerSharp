@@ -3,6 +3,7 @@ using AndreasReitberger.Logging.Interfaces;
 using Newtonsoft.Json;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace AndreasReitberger.Logging
@@ -13,7 +14,11 @@ namespace AndreasReitberger.Logging
         #region Instance
 
         static EventLogger? _instance = null;
+#if NET9_0_OR_GREATER
+        static readonly Lock Lock = new();
+#else
         static readonly object Lock = new();
+#endif
         public static EventLogger Instance
         {
             get
@@ -37,11 +42,14 @@ namespace AndreasReitberger.Logging
         [ObservableProperty]
         public partial Guid Id { get; set; } = Guid.Empty;
 
-        #endregion
+#endregion
 
         #region Properties
 
         #region General
+
+        [ObservableProperty]
+        public partial LogLevel LogLevel { get; set; } = LogLevel.All;
 
         [ObservableProperty]
         public partial bool UseJson { get; set; } = true;
@@ -61,17 +69,21 @@ namespace AndreasReitberger.Logging
         {
             Id = Guid.NewGuid();
         }
+        public EventLogger(string logPath) : this()
+        {
+            LogPath = logPath;
+        }
         #endregion
 
         #region Public Methods
 
         #region Logging
-        public void WriteToConsole(string message, LogLevel level = LogLevel.Info)
+        public static void WriteToConsole(string message, LogType level = LogType.Info)
         {
             ConsoleColor foreground = level switch
             {
-                LogLevel.Warning => ConsoleColor.Yellow,
-                LogLevel.Error => ConsoleColor.Red,
+                LogType.Warning => ConsoleColor.Yellow,
+                LogType.Error => ConsoleColor.Red,
                 _ => ConsoleColor.White,
             };
             if (!string.IsNullOrEmpty(message))
@@ -81,7 +93,8 @@ namespace AndreasReitberger.Logging
                 Console.ForegroundColor = ConsoleColor.White;
             }
         }
-        public void Log(string message, LogLevel level = LogLevel.Info)
+
+        public void Log(string message, LogType level = LogType.Info)
         {
             string logText = $"{DateTime.Now}: {level}\t| {message}";
             // Always report the text also to the console
@@ -102,9 +115,10 @@ namespace AndreasReitberger.Logging
 
                 sw.WriteLine(logText);
                 sw.Close();
+                fs.Close();
             }
         }
-        public async Task LogAsync(string message, LogLevel level = LogLevel.Info)
+        public async Task LogAsync(string message, LogType level = LogType.Info)
         {
             string logText = $"{DateTime.Now}: {level} | {message}";
             // Always report the text also to the console
@@ -125,6 +139,7 @@ namespace AndreasReitberger.Logging
 
                 await sw.WriteLineAsync(logText);
                 sw.Close();
+                fs.Close();
             }
         }
         #endregion

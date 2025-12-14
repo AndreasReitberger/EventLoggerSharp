@@ -19,7 +19,8 @@ namespace AndreasReitberger.Logging.Interfaces
         public bool UseJson { get; set; }
         #endregion
 
-        #region Api
+        #region Logging
+        public LogLevel LogLevel { get; set; }
         public string LogPath { get; set; }
         public string LogFileExtension { get; set; }
 
@@ -35,9 +36,8 @@ namespace AndreasReitberger.Logging.Interfaces
         #region Methods
 
         #region Logging
-
-        public void Log(string message, LogLevel level = LogLevel.Info);
-        public Task LogAsync(string message, LogLevel level = LogLevel.Info);
+        public void Log(string message, LogType level = LogType.Info);
+        public Task LogAsync(string message, LogType level = LogType.Info);
         #endregion
 
         #endregion
